@@ -104,6 +104,6 @@ client.send_transaction(trx, *signers, opts=TxOpts(skip_confirmation=False, skip
 
 
 #Minting tokens to destination account
-token.mint_to(sol_erc20_token_account_address, payer, 100000)
+token.mint_to(sol_erc20_token_account_address, payer, 1000000000000)
 
 print("Everything went well if you see this")

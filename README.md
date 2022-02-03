@@ -2,8 +2,12 @@
 
 ## Requirements
 
-[Install solana CLI to your computer](https://docs.solana.com/ru/cli/install-solana-cli-tools)
-[Install SPL Token program](https://spl.solana.com/token)
+  - [Install solana CLI to your computer](https://docs.solana.com/ru/cli/install-solana-cli-tools)
+  - [Install SPL Token program](https://spl.solana.com/token)
+  - python3 and pip3 installed
+  - install python requirements:
+    
+    > pip3 install -r requirements.txt
 
 ## Steps
 

@@ -38,20 +38,24 @@
   
   Copy Base59 encoded string returned by this command in line like:
   
-  > pubkey: BFKkPtYHXVZKkbkdp9SCQLAM8tr89c4KvHMc9vm6b6t8
+  > Creating token 3CZZw1DhdzhmWkCBddvDFcPHJsRzG4SktcYg6MtNKY5Z
 
 8. Convert this Base58 address representation into HEX using [this service](https://appdevtools.com/base58-encoder-decoder) and copy resulting value
 
-9. Replace 3rd argument of NeonERC20Wrapper by value got on previous step *NOTE* Add 0x prefix to it
+9. Replace 3rd argument of NeonERC20Wrapper (line 58) by value got on previous step *NOTE* Add 0x prefix to it
   
 10. Load ERC20Example.sol file into [Remix](https://remix.ethereum.org) then compile and deploy it using Injected Web3 Environment on page "Deploy & run transactions" *NOTE* you should be connected to the same Metamask account that was supplied with airdrop on step 5 and to the same network that was setup on step 4.
 
 11. Call getWrappedAddress function and copy resulting ERC20 wrapper contract address
 
+12. Import newly created token into Metamask. Balance should be 0
+
 12. Run mint_erc20_wrapped_token.py script with 2 arguments:
-  - first - contract address copied on the previous step
+  - first - contract address got on the step 11
   - second - your Metamask wallet address
   
   For example:
   
     > python3 mint_erc20_wrapped_token.py 0xb19665132A95e06887e085564e43635eCC24e139 0xf71c4DACa893E5333982e2956C5ED9B648818376
+    
+  After successfull execution balance should change to 1000

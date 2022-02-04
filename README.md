@@ -1,4 +1,4 @@
-# Example of wrapping SPL token by ERC2-20 interface in Neon
+# Example of wrapping SPL token by ERC-20 interface in Neon
 
 ## Requirements
 

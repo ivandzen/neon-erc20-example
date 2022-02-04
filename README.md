@@ -30,13 +30,13 @@
     
 6. cd to this file's parent directory in command line
 
-8. Generate keypair for new SPL token:
+7. Generate keypair for new SPL token:
 
   > solana-keygen new -o test-token-mint.json --force
   
   You will be asked for passphrase (can skip this step by pressing Enter)
     
-7. Create new SPL token by running command:
+8. Create new SPL token by running command:
    
   > spl-token --url devnet create-token -- test-token-mint.json
   
@@ -44,17 +44,17 @@
   
   > Creating token 3CZZw1DhdzhmWkCBddvDFcPHJsRzG4SktcYg6MtNKY5Z
 
-8. Convert this Base58 address representation into HEX using [this service](https://appdevtools.com/base58-encoder-decoder) and copy resulting value
+9. Convert this Base58 address representation into HEX using [this service](https://appdevtools.com/base58-encoder-decoder) and copy resulting value
 
-9. Replace tokenMint value on line 34 by value got on previous step *NOTE* Add 0x prefix to it
+10. Replace tokenMint value on line 34 by value got on previous step *NOTE* Add 0x prefix to it
   
-10. Load ERC20Example.sol file into [Remix](https://remix.ethereum.org) then compile and deploy it using Injected Web3 Environment on page "Deploy & run transactions" *NOTE* you should be connected to the same Metamask account that was supplied with airdrop on step 5 and to the same network that was setup on step 4.
+11. Load ERC20Example.sol file into [Remix](https://remix.ethereum.org) then compile and deploy it using Injected Web3 Environment on page "Deploy & run transactions" *NOTE* you should be connected to the same Metamask account that was supplied with airdrop on step 5 and to the same network that was setup on step 4.
 
-11. Copy ERC20 contract address
+12. Copy ERC20 contract address
 
-12. Import newly created token into Metamask. Balance should be 0
+13. Import newly created token into Metamask. Balance should be 0
 
-12. Run mint_erc20_wrapped_token.py script with 2 arguments:
+14. Run mint_erc20_wrapped_token.py script with 2 arguments:
   - first - contract address got on the step 11
   - second - your Metamask wallet address
   

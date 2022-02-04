@@ -40,7 +40,7 @@
    
   > spl-token --url devnet create-token -- test-token-mint.json
   
-  Copy Base59 encoded string returned by this command in line like:
+  Copy Base58 encoded string returned by this command in line like:
   
   > Creating token 3CZZw1DhdzhmWkCBddvDFcPHJsRzG4SktcYg6MtNKY5Z
 

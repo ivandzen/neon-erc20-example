@@ -11,55 +11,86 @@
 
 ## Steps
 
-1. Find your solana wallet address by typing in command line:
+1. Make sure you are on devnet solana:
+  > solana config get
+  
+  RPC URL should be https://api.devnet.solana.com
+  
+  Evaluate command if not:
+  > solana config set --url devnet 
+
+2. Find your solana wallet address by typing in command line:
 
   > solana address
   
-2. Airdrop some SOLs to your wallet address from [here](http://solfaucet.com) *NOTE* Make sure you airdropping to devnet
+3. Airdrop some SOLs to your wallet address from [here](http://solfaucet.com) *NOTE* Make sure you airdropping to devnet
 
-3. Check that balance is non-zero (1 SOL will be enough):
+4. Check that balance is non-zero (1 SOL will be enough):
   
-  > solana --url devnet balance
+  > solana balance
+
+### Prepare Solana side
+
+5. cd to this file's parent directory in command line
+
+6. Generate keypair for new SPL token:
+  > solana-keygen new -o test-token-mint.json --force
   
-4. Connect your metamask wallet to Neon Devnet using this settings:
+  You will be asked for passphrase (may skip this step by pressing Enter)
+  test-token-mint.json file now contains private key of your SPL token. Now we will extract it's public key to environment variable using solana tool:
+  > AWESOME_TOKEN_ADDRESS=$(solana address -k test-token-mint.json)
+    
+7. Create new SPL token by running command:
+  > spl-token create-token -- test-token-mint.json
+
+8. Create associated token account using token mint address got on previous step:
+  > spl-token create-account $AWESOME_TOKEN_ADDRESS
+
+  After succesfull execution of this command you will get address of your new token account and signature of the transaction
+
+9. Mint some tokens to just created wallet:
+  > spl-token mint $AWESOME_TOKEN_ADDRESS 1000
+
+10. Check balance
+  > spl-token balance $AWESOME_TOKEN_ADDRESS
+
+
+### Prepare Neon side
+
+10. First of all, let's decode base58 encoded token address to HEX representation and copy resulting output:
+  > printf ${AWESOME_TOKEN_ADDRESS} | base58 -d | xxd -p
+
+  Sometimes there will be two or more strings in the output, something like this:
+  > 761784519394f3fb582a88072a13dc0bd71ffb7e09253fe0b20e6b8faf66
+  >
+  > b20a
+
+  Don't worry, this is because of the way this piping works, just copy all the lines and then remove newline characters:
+  > 761784519394f3fb582a88072a13dc0bd71ffb7e09253fe0b20e6b8faf66b20a
+
+11. Replace tokenMint value in file ERC20Example.sol (line 16) by value got on previous step *NOTE* Add 0x prefix to it
+
+12. Connect your metamask wallet to Neon Devnet using this settings:
     - New RPC URL: https://proxy.devnet.neonlabs.org/solana
     - Chain ID: 245022926
     - Currency Symbol (optional): NEON
     
-5. Airdrop some NEONs to your wallet by [this](https://neonswap.live/#/get-tokens) link - will drop maximum 10 tokens at a time.
-    
-6. cd to this file's parent directory in command line
-
-7. Generate keypair for new SPL token:
-
-  > solana-keygen new -o test-token-mint.json --force
+13. Airdrop some NEONs to your wallet by [this](https://neonswap.live/#/get-tokens) link - will drop maximum 10 tokens at a time.
   
-  You will be asked for passphrase (can skip this step by pressing Enter)
-    
-8. Create new SPL token by running command:
-   
-  > spl-token --url devnet create-token -- test-token-mint.json
-  
-  Copy Base58 encoded string returned by this command in line like:
-  
-  > Creating token 3CZZw1DhdzhmWkCBddvDFcPHJsRzG4SktcYg6MtNKY5Z
+14. Load ERC20Example.sol file into [Remix](https://remix.ethereum.org) then compile and deploy it using Injected Web3 Environment on page "Deploy & run transactions".
 
-9. Convert this Base58 address representation into HEX using [this service](https://appdevtools.com/base58-encoder-decoder) and copy resulting value
+15. Copy ERC20 contract address
 
-10. Replace tokenMint value on line 34 by value got on previous step *NOTE* Add 0x prefix to it
-  
-11. Load ERC20Example.sol file into [Remix](https://remix.ethereum.org) then compile and deploy it using Injected Web3 Environment on page "Deploy & run transactions" *NOTE* you should be connected to the same Metamask account that was supplied with airdrop on step 5 and to the same network that was setup on step 4.
+16. Import newly created token into Metamask. Balance should be 0
 
-12. Copy ERC20 contract address
+### Transfer from Solana to Neon
 
-13. Import newly created token into Metamask. Balance should be 0
-
-14. Run mint_erc20_wrapped_token.py script with 2 arguments:
+17. Run create_erc20_wrapped_wallet.py script with 2 arguments:
   - first - contract address got on the step 11
   - second - your Metamask wallet address
   
   For example:
   
-    > python3 mint_erc20_wrapped_token.py 0xb19665132A95e06887e085564e43635eCC24e139 0xf71c4DACa893E5333982e2956C5ED9B648818376
+    > python3 mint_erc20_wrapped_token.py 0x4ced59EF4b7bEdaA1f5DB17D9F71E7B1bd7C5bea 0xf71c4DACa893E5333982e2956C5ED9B648818376
     
-  After successfull execution balance should change to 1000
+

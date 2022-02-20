@@ -104,7 +104,7 @@ class ERC20Wrapper:
         self.neon_client = neon_client
         self.token_mint = token_mint
         self.eth_contract_address = eth_contract_address
-        self.solana_contract_address = self.eth_to_solana_address(self.eth_contract_address)
+        self.solana_contract_address = self.eth_to_solana_address(self.eth_contract_address)[0]
         self.interface = interface
         self.wrapper = wrapper
 
@@ -184,7 +184,7 @@ class ERC20Wrapper:
                 keys=[
                     AccountMeta(pubkey=payer.public_key(), is_signer=True, is_writable=True),
                     AccountMeta(pubkey=SYS_PROGRAM_ID, is_signer=False, is_writable=False),
-                    AccountMeta(pubkey=PublicKey(root_acc), is_signer=False, is_writable=True),
+                    AccountMeta(pubkey=root_acc, is_signer=False, is_writable=True),
                 ]))
 
         dest_token_account = self.get_wrapped_token_account_address(dest_neon)
@@ -238,22 +238,3 @@ class ERC20Wrapper:
 
             opts = TxOpts(skip_preflight=True, skip_confirmation=False)
             print(self.solana_client.send_transaction(trx, dest_sol, opts))
-
-
-
-
-
-
-
-from eth_keys.datatypes import PrivateKey as NeonPrivateKey
-
-neon_client = Web3('https://proxy.devnet.neonlabs.org/solana')
-eth_account = neon_client.eth.account.from_key(NeonPrivateKey(bytes.fromhex('f5cc5e36108264bc26e33616287a34eeaab06bffc6890e7db40d53e7821b382a')))        
-
-wrapper = ERC20Wrapper.deploy(
-    'TestToken2', 
-    'TTOK2', 
-    SolanaClient('https://api.devnet.solana.com'),
-    Web3('https://proxy.devnet.neonlabs.org/solana'),
-    PublicKey('B5yv59YHm2caQd4BCB97Ws36Qo9dxokou3T3Dw2zjM9h'),
-    eth_account)

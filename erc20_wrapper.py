@@ -177,10 +177,10 @@ class ERC20Wrapper:
         trx = Transaction()
         root_acc, nonce = self.eth_to_solana_address(dest_neon)
         if not self.is_account_exist(root_acc):
-            data = create_account_layout(bytes(dest_neon[2:]), nonce)
+            print(f'Destination Neon account {root_acc} does not exist. It will be created.')
             trx.add(TransactionInstruction(
                 program_id=EVM_LOADER_ID,
-                data=data,
+                data=create_account_layout(bytes.fromhex(dest_neon[2:]), nonce),
                 keys=[
                     AccountMeta(pubkey=payer.public_key(), is_signer=True, is_writable=True),
                     AccountMeta(pubkey=SYS_PROGRAM_ID, is_signer=False, is_writable=False),
@@ -189,6 +189,7 @@ class ERC20Wrapper:
 
         dest_token_account = self.get_wrapped_token_account_address(dest_neon)
         if not self.is_account_exist(dest_token_account):
+            print(f'Destination ERC20-Wrapped Token Account {dest_token_account} does not exist. It will be created.')
             trx.add(TransactionInstruction(
                 program_id=EVM_LOADER_ID,
                 data=bytes.fromhex('0F'),
@@ -204,6 +205,7 @@ class ERC20Wrapper:
                 ]
             ))
 
+        print(f'{amount} of tokens {self.token_mint} will be transferred from Associated Token Account {source_token_acc} to ERC20-Wrapped Token Account {dest_token_account}.')
         trx.add(TransactionInstruction(
             program_id=TOKEN_PROGRAM_ID,
             data=b'\3' + struct.pack('<Q', amount),
@@ -215,40 +217,46 @@ class ERC20Wrapper:
         ))
 
         opts = TxOpts(skip_preflight=True, skip_confirmation=False)
-        return self.solana_client.send_transaction(trx, payer, opts=opts)
+        self.solana_client.send_transaction(trx, payer, opts=opts)
+        print(f'Withdraw complete.')
 
     def withdraw(self,
                  source_neon: NeonAccount,
-                 dest_sol: SolanaAccount,
-                 amount: int):
+                 dest_sol: PublicKey,
+                 amount: int,
+                 payer: SolanaAccount):
+
         source_token_account = self.get_wrapped_token_account_address(source_neon.address)
         if not self.is_account_exist(source_token_account):
-            raise RuntimeError(f'Source token account {source_token_account} not exist')
+            raise RuntimeError(f'Source ERC20-Wrapped Token Account {source_token_account} does not exist.')
         
-        dest_token_account = get_associated_token_address(dest_sol.public_key(), self.token_mint)
+        dest_token_account = get_associated_token_address(dest_sol, self.token_mint)
         if not self.is_account_exist(dest_token_account):
+            print(f'Destination Associated Token Account {dest_token_account} does not exist (owner is {dest_sol}). Creating account...')
             trx = Transaction()
             trx.add(
                 create_associated_token_account(
-                    dest_sol.public_key(), 
-                    dest_sol.public_key(), 
+                    payer.public_key(), 
+                    dest_sol, 
                     self.token_mint
                 )
             )
 
             opts = TxOpts(skip_preflight=True, skip_confirmation=False)
-            print(self.solana_client.send_transaction(trx, dest_sol, opts))
+            self.solana_client.send_transaction(trx, payer, opts=opts)
 
+        print(f'Approving transfer of {amount} tokens for solana account {dest_sol}...')
         contract = self.neon_client.eth.contract(address=self.eth_contract_address, abi=self.interface_abi)
         nonce = self.neon_client.eth.get_transaction_count(source_neon.address)
-        tx = contract.functions.approveSolana(bytes(dest_sol.public_key()), amount).buildTransaction({'nonce': nonce})
+        tx = contract.functions.approveSolana(bytes(dest_sol), amount).buildTransaction({'nonce': nonce})
         tx = self.neon_client.eth.account.sign_transaction(tx, source_neon.key)
         tx_hash = self.neon_client.eth.send_raw_transaction(tx.rawTransaction)
         tx_receipt = self.neon_client.eth.wait_for_transaction_receipt(tx_hash)
 
         if tx_receipt.status != 1:
-            raise RuntimeError(f'Failed to call approveSolana({dest_sol.public_key()}, {amount})')
+            raise RuntimeError(f'Failed to call approveSolana({dest_sol}, {amount})')
 
+        print(f'Transfering tokens from ERC20-Wrapped Token Account {source_token_account} to Associated Token Account {dest_token_account}...')
         trx = Transaction()
         trx.add(TransactionInstruction(
             program_id=TOKEN_PROGRAM_ID,
@@ -256,10 +264,10 @@ class ERC20Wrapper:
             keys=[
                 AccountMeta(pubkey=source_token_account, is_signer=False, is_writable=True),
                 AccountMeta(pubkey=dest_token_account, is_signer=False, is_writable=True),
-                AccountMeta(pubkey=dest_sol.public_key(), is_signer=True, is_writable=False)
+                AccountMeta(pubkey=payer.public_key(), is_signer=True, is_writable=False)
             ]
         ))
 
         opts = TxOpts(skip_preflight=True, skip_confirmation=False)
-        return self.solana_client.send_transaction(trx, dest_sol, opts=opts)
+        self.solana_client.send_transaction(trx, payer, opts=opts)
 

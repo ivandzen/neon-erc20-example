@@ -1,2 +1,3 @@
 test-token-mint.json
 venv/*
+__pycache__/*

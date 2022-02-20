@@ -1,2 +1,5 @@
 solana==0.10.0
 base58
+py-solc-x
+toolz
+web3==5.22.0

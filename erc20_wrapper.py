@@ -13,6 +13,7 @@ from spl.token.constants import TOKEN_PROGRAM_ID
 from solana.sysvar import SYSVAR_RENT_PUBKEY
 from solana.rpc.types import TxOpts
 from eth_account.signers.local import LocalAccount as NeonAccount
+import json
 import struct
 install_solc(version='0.7.6')
 from solcx import compile_source
@@ -98,15 +99,13 @@ class ERC20Wrapper:
                  neon_client: Web3,
                  token_mint: PublicKey,
                  eth_contract_address: str,
-                 interface,
-                 wrapper):
+                 interface_abi):
         self.solana_client = solana_client
         self.neon_client = neon_client
         self.token_mint = token_mint
         self.eth_contract_address = eth_contract_address
         self.solana_contract_address = self.eth_to_solana_address(self.eth_contract_address)[0]
-        self.interface = interface
-        self.wrapper = wrapper
+        self.interface_abi = interface_abi
 
     @staticmethod
     def deploy(name: str,
@@ -117,6 +116,8 @@ class ERC20Wrapper:
                payer: NeonAccount):
         compiled_interface = compile_source(ERC20_INTERFACE_SOURCE)
         _, interface = compiled_interface.popitem()
+        with open('./erc20_iface.json', 'w') as f:
+            json.dump(interface['abi'], f)
 
         compiled_wrapper = compile_source(ERC20_CONTRACT_SOURCE)
         _, wrapper = compiled_wrapper.popitem()
@@ -134,8 +135,7 @@ class ERC20Wrapper:
             neon_client,
             token_mint,
             eth_contract_address,
-            interface,
-            wrapper)
+            interface['abi'])
         
 
     def eth_to_solana_address(self, eth_account_address: str) -> PublicKey:
@@ -221,7 +221,7 @@ class ERC20Wrapper:
                  source_neon: NeonAccount,
                  dest_sol: SolanaAccount,
                  amount: int):
-        source_token_account = self.get_wrapped_token_account_address(source_neon)
+        source_token_account = self.get_wrapped_token_account_address(source_neon.address)
         if not self.is_account_exist(source_token_account):
             raise RuntimeError(f'Source token account {source_token_account} not exist')
         
@@ -231,10 +231,35 @@ class ERC20Wrapper:
             trx.add(
                 create_associated_token_account(
                     dest_sol.public_key(), 
-                    dest_sol.public_key, 
+                    dest_sol.public_key(), 
                     self.token_mint
                 )
             )
 
             opts = TxOpts(skip_preflight=True, skip_confirmation=False)
             print(self.solana_client.send_transaction(trx, dest_sol, opts))
+
+        contract = self.neon_client.eth.contract(address=self.eth_contract_address, abi=self.interface_abi)
+        nonce = self.neon_client.eth.get_transaction_count(source_neon.address)
+        tx = contract.functions.approveSolana(bytes(dest_sol.public_key()), amount).buildTransaction({'nonce': nonce})
+        tx = self.neon_client.eth.account.sign_transaction(tx, source_neon.key)
+        tx_hash = self.neon_client.eth.send_raw_transaction(tx.rawTransaction)
+        tx_receipt = self.neon_client.eth.wait_for_transaction_receipt(tx_hash)
+
+        if tx_receipt.status != 1:
+            raise RuntimeError(f'Failed to call approveSolana({dest_sol.public_key()}, {amount})')
+
+        trx = Transaction()
+        trx.add(TransactionInstruction(
+            program_id=TOKEN_PROGRAM_ID,
+            data=b'\3' + struct.pack('<Q', amount),
+            keys=[
+                AccountMeta(pubkey=source_token_account, is_signer=False, is_writable=True),
+                AccountMeta(pubkey=dest_token_account, is_signer=False, is_writable=True),
+                AccountMeta(pubkey=dest_sol.public_key(), is_signer=True, is_writable=False)
+            ]
+        ))
+
+        opts = TxOpts(skip_preflight=True, skip_confirmation=False)
+        return self.solana_client.send_transaction(trx, dest_sol, opts=opts)
+

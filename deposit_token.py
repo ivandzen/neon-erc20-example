@@ -22,7 +22,7 @@ wrapper = ERC20Wrapper(
     neon_client,
     TOKEN_MINT,
     ERC20_CONTRACT_ADDRESS,
-    None, None)
+    None) #interface not used
 
 home = expanduser("~")
 with open(join(home, ".config/solana/id.json")) as f:

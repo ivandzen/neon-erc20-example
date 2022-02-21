@@ -2,8 +2,8 @@ from erc20_wrapper import ERC20Wrapper
 from common import *
 
 wrapper = ERC20Wrapper.deploy(
-    'TestToken2', 
-    'TTOK2', 
+    'Awesome Token', 
+    'AWST', 
     solana_client,
     neon_client,
     TEST_TOKEN_MINT,

@@ -9,7 +9,7 @@ from solana.rpc.commitment import Commitment
 from construct import Bytes, Int8ul
 from construct import Struct
 from solana.system_program import SYS_PROGRAM_ID
-from spl.token.constants import TOKEN_PROGRAM_ID
+from spl.token.constants import TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID
 from solana.sysvar import SYSVAR_RENT_PUBKEY
 from solana.rpc.types import TxOpts
 from eth_account.signers.local import LocalAccount as NeonAccount
@@ -21,6 +21,7 @@ from solcx import compile_source
 Confirmed = Commitment("confirmed")
 
 EVM_LOADER_ID = PublicKey('eeLSJgWzzxrqKv1UxtRVVH8FX3qCQWUs9QuAjJpETGU')
+NEON_TOKEN_MINT = PublicKey('89dre8rZjLNft7HoupGiyxu3MNftR577ZYu8bHe2kK7g')
 
 CREATE_ACCOUNT_LAYOUT = Struct(
     "ether" / Bytes(20),
@@ -28,7 +29,7 @@ CREATE_ACCOUNT_LAYOUT = Struct(
 )
 
 def create_account_layout(ether, nonce):
-    return bytes.fromhex("18")+CREATE_ACCOUNT_LAYOUT.build(dict(
+    return bytes.fromhex("0200000000000000000000000000000000000000")+CREATE_ACCOUNT_LAYOUT.build(dict(
         ether=ether,
         nonce=nonce
     ))
@@ -175,16 +176,22 @@ class ERC20Wrapper:
             payer = source_sol
 
         trx = Transaction()
-        root_acc, nonce = self.eth_to_solana_address(dest_neon)
-        if not self.is_account_exist(root_acc):
-            print(f'Destination Neon account {root_acc} does not exist. It will be created.')
+        neon_acc, nonce = self.eth_to_solana_address(dest_neon)
+        assoc_acc = get_associated_token_address(neon_acc, NEON_TOKEN_MINT)
+        if not self.is_account_exist(neon_acc):
+            print(f'Destination Neon account {neon_acc} does not exist. It will be created.')
             trx.add(TransactionInstruction(
                 program_id=EVM_LOADER_ID,
                 data=create_account_layout(bytes.fromhex(dest_neon[2:]), nonce),
                 keys=[
                     AccountMeta(pubkey=payer.public_key(), is_signer=True, is_writable=True),
+                    AccountMeta(pubkey=neon_acc, is_signer=False, is_writable=True),
+                    AccountMeta(pubkey=assoc_acc, is_signer=False, is_writable=True),
                     AccountMeta(pubkey=SYS_PROGRAM_ID, is_signer=False, is_writable=False),
-                    AccountMeta(pubkey=root_acc, is_signer=False, is_writable=True),
+                    AccountMeta(pubkey=NEON_TOKEN_MINT, is_signer=False, is_writable=False),
+                    AccountMeta(pubkey=TOKEN_PROGRAM_ID, is_signer=False, is_writable=False),
+                    AccountMeta(pubkey=ASSOCIATED_TOKEN_PROGRAM_ID, is_signer=False, is_writable=False),
+                    AccountMeta(pubkey=SYSVAR_RENT_PUBKEY, is_signer=False, is_writable=False),
                 ]))
 
         dest_token_account = self.get_wrapped_token_account_address(dest_neon)
@@ -196,7 +203,7 @@ class ERC20Wrapper:
                 keys=[
                     AccountMeta(pubkey=payer.public_key(), is_signer=True, is_writable=True),
                     AccountMeta(pubkey=dest_token_account, is_signer=False, is_writable=True),
-                    AccountMeta(pubkey=root_acc, is_signer=False, is_writable=True),
+                    AccountMeta(pubkey=neon_acc, is_signer=False, is_writable=True),
                     AccountMeta(pubkey=self.solana_contract_address, is_signer=False, is_writable=True),
                     AccountMeta(pubkey=self.token_mint, is_signer=False, is_writable=True),
                     AccountMeta(pubkey=SYS_PROGRAM_ID, is_signer=False, is_writable=False),
@@ -217,8 +224,8 @@ class ERC20Wrapper:
         ))
 
         opts = TxOpts(skip_preflight=True, skip_confirmation=False)
-        self.solana_client.send_transaction(trx, payer, opts=opts)
-        print(f'Withdraw complete.')
+        resp = self.solana_client.send_transaction(trx, payer, opts=opts)
+        print(f"Signatures: {resp['result']['transaction']['signatures']}")
 
     def withdraw(self,
                  source_neon: NeonAccount,

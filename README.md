@@ -9,7 +9,7 @@
     
     > pip3 install -r requirements.txt
 
-## Steps
+## Setup Solana account
 
 1. Make sure you are on devnet solana:
   > solana config get
@@ -19,78 +19,74 @@
   Evaluate command if not:
   > solana config set --url devnet 
 
-2. Find your solana wallet address by typing in command line:
+2. Create new solana account. You will be asked for passphrase (may skip this step by pressing Enter)
+  > solana-keygen new -o ~/.config/solana/id.json --force
 
+3. Find your solana wallet address by typing in command line:
   > solana address
   
-3. Airdrop some SOLs to your wallet address from [here](http://solfaucet.com) *NOTE* Make sure you airdropping to devnet
+4. Airdrop some SOLs to your wallet address from [here](http://solfaucet.com) *NOTE* Make sure you airdropping to devnet
 
-4. Check that balance is non-zero (1 SOL will be enough):
-  
-  > solana balance
+## Setup Neon account (using Metamask)
 
-### Prepare Solana side
+1. Create new account in Metamask
 
-5. cd to this file's parent directory in command line
+2. Copy new account's private key (Account Details >> Export Private Key)
 
-6. Generate keypair for new SPL token:
+3. Insert just copied private key into quotes in line 15 file common.py
+
+4. Airdrop some NEONs to just created account [here](https://neonswap.live/#/get-tokens) 
+
+## Create new token mint
+
+1. cd to this file's parent directory in command line
+
+2. Generate keypair for new SPL token:
   > solana-keygen new -o test-token-mint.json --force
   
   You will be asked for passphrase (may skip this step by pressing Enter)
   test-token-mint.json file now contains private key of your SPL token. Now we will extract it's public key to environment variable using solana tool:
   > AWESOME_TOKEN_ADDRESS=$(solana address -k test-token-mint.json)
-    
-7. Create new SPL token by running command:
-  > spl-token create-token -- test-token-mint.json
 
-8. Create associated token account using token mint address got on previous step:
-  > spl-token create-account $AWESOME_TOKEN_ADDRESS
+3. Create new SPL token by running command:
+  > spl-token -u devnet create-token -- test-token-mint.json
+
+4. Copy value contained by AWESOME_TOKEN_ADDRESS
+  > echo $AWESOME_TOKEN_ADDRESS
+
+5. Insert this value into quotes in line 22 file common.py
+
+## Creating ERC20 wrapper
+
+1. > python3 deploy_wrapper.py
+
+2. Save ERC20 wrapper address got in previous comand output.
+
+3. Import just created token into Metamask.
+
+## Minting tokens
+
+1. Create associated token account using token mint address got on previous step:
+  > spl-token -u devnet create-account $AWESOME_TOKEN_ADDRESS
 
   After succesfull execution of this command you will get address of your new token account and signature of the transaction
 
-9. Mint some tokens to just created wallet:
-  > spl-token mint $AWESOME_TOKEN_ADDRESS 1000
+2. Mint some tokens to just created wallet:
+  > spl-token -u devnet mint $AWESOME_TOKEN_ADDRESS 1000
 
-10. Check balance
-  > spl-token balance $AWESOME_TOKEN_ADDRESS
+3. Check balance
+  > spl-token -u devnet balance $AWESOME_TOKEN_ADDRESS
 
+## Depositing SPL tokens from Solana into Neon
 
-### Prepare Neon side
+1. Run deposit_token.py with two arguments:
+  - address of ERC20 wrapper got on step 'Creating ERC20 wrapper'
+  - amount
+  > python3 deposit_token.py 0x5221D25fEDf90a01BE219be13C9D050C640Ea3A0 10000000000
 
-10. First of all, let's decode base58 encoded token address to HEX representation and copy resulting output:
-  > printf ${AWESOME_TOKEN_ADDRESS} | base58 -d | xxd -p
+## Withdrawing ERC20-wrapped SPL tokens from Neon to Solana
 
-  Sometimes there will be two or more strings in the output, something like this:
-  > 761784519394f3fb582a88072a13dc0bd71ffb7e09253fe0b20e6b8faf66
-  >
-  > b20a
-
-  Don't worry, this is because of the way this piping works, just copy all the lines and then remove newline characters:
-  > 761784519394f3fb582a88072a13dc0bd71ffb7e09253fe0b20e6b8faf66b20a
-
-11. Replace tokenMint value in file ERC20Example.sol (line 16) by value got on previous step *NOTE* Add 0x prefix to it
-
-12. Connect your metamask wallet to Neon Devnet using this settings:
-    - New RPC URL: https://proxy.devnet.neonlabs.org/solana
-    - Chain ID: 245022926
-    - Currency Symbol (optional): NEON
-    
-13. Airdrop some NEONs to your wallet by [this](https://neonswap.live/#/get-tokens) link - will drop maximum 10 tokens at a time.
-  
-14. Load ERC20Example.sol file into [Remix](https://remix.ethereum.org) then compile and deploy it using Injected Web3 Environment on page "Deploy & run transactions".
-
-15. Copy ERC20 contract address
-
-16. Import newly created token into Metamask. Balance should be 0
-
-### Transfer from Solana to Neon
-
-17. Run create_erc20_wrapped_wallet.py script with 2 arguments:
-  - first - contract address got on the step 11
-  - second - your Metamask wallet address
-  
-  For example:
-  
-    > python3 mint_erc20_wrapped_token.py 0x4ced59EF4b7bEdaA1f5DB17D9F71E7B1bd7C5bea 0xf71c4DACa893E5333982e2956C5ED9B648818376
-    
-
+1. Run withdraw_token.py with two arguments:
+  - address of ERC20 wrapper got on step 'Creating ERC20 wrapper'
+  - amount
+  > python3 withdraw_token.py 0x5221D25fEDf90a01BE219be13C9D050C640Ea3A0 1000000000

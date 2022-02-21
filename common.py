@@ -12,11 +12,11 @@ neon_client = Web3(Web3.HTTPProvider('https://proxy.devnet.neonlabs.org/solana')
 
 # Accounts
 
-neon_account = neon_client.eth.account.from_key(NeonPrivateKey(bytes.fromhex('f5cc5e36108264bc26e33616287a34eeaab06bffc6890e7db40d53e7821b382a')))
+neon_account = neon_client.eth.account.from_key(NeonPrivateKey(bytes.fromhex('a95f0b88ebb9abb2a5cc30960c31a66a5ed6293fb3d26eb825a26f36945ef55b')))
 
 home = expanduser("~")
 with open(join(home, ".config/solana/id.json")) as f:
     d = json.load(f)
 solana_account = SolanaAccount(d[0:32])     
 
-TEST_TOKEN_MINT = PublicKey('B5yv59YHm2caQd4BCB97Ws36Qo9dxokou3T3Dw2zjM9h')
+TEST_TOKEN_MINT = PublicKey('EeuhBp3eKXrKEvqtM5M17UdAaJYxfe5dSf5qBGfkhHCR')

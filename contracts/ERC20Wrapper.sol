@@ -11,9 +11,9 @@ contract NeonERC20Wrapper {
     bytes32 public tokenMint;
 
     constructor() {
-        name = "TickToken";
+        name = "TestToken";
         symbol = "TTOK";
-        tokenMint = 0xf5d945ce24b53ff29297dd1203c7d873dfa846104ca3ec4902507a8f7f6c94c2;
+        tokenMint = 0xcaddffffafc3be91dffc0ee860f0194006063e51cb170f7288f3a103952f3146;
     }
 
     fallback() external {

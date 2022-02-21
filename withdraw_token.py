@@ -22,7 +22,7 @@ with open('./erc20_iface.json', 'r') as f:
 
 # Creating accounts
 home = expanduser("~")
-with open(join(home, ".config/solana/id.json")) as f:
+with open(join(home, ".config/solana/id3.json")) as f:
     d = json.load(f)
 solana_acc = SolanaAccount(d[0:32])
 neon_account = neon_client.eth.account.from_key(NeonPrivateKey(bytes.fromhex('f5cc5e36108264bc26e33616287a34eeaab06bffc6890e7db40d53e7821b382a')))  
@@ -34,4 +34,4 @@ wrapper = ERC20Wrapper(
     ERC20_CONTRACT_ADDRESS,
     interface_abi)
 
-wrapper.withdraw(neon_account, solana_acc, AMOUNT)
+wrapper.withdraw(neon_account, solana_acc.public_key(), AMOUNT, solana_acc)

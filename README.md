@@ -3,11 +3,13 @@
 ## Requirements
 
   - [Install solana CLI to your computer](https://docs.solana.com/ru/cli/install-solana-cli-tools)
-  - [Install SPL Token program](https://spl.solana.com/token)
+  - [Install SPL Token program](https://spl.solana.com/token). If you are using one of Linux distributions you will probably should install packets: gcc, libudev-dev, libssl-dev. 
   - python3 and pip3 installed
   - install python requirements:
     
     > pip3 install -r requirements.txt
+
+  - npm package manager if you'd like to deploy contracts using hardhat
 
 ## Setup Solana account
 
@@ -36,7 +38,7 @@
 - Airdrop some NEONs to just created account [here](https://neonswap.live/#/get-tokens)
 - Copy your Metamask account private key (Account Details >> Export Private Key)
 - Insert just copied private key into quotes in line 15 in file **common.py**
-- Insert just copied private key into quotes in line 5 in file **hardhat.config.py**
+- Insert just copied private key into quotes in line 5 in file **hardhat.config.py** - **NOTE** Add **0x** prefix in begining
 
 ## Create new token mint
 
@@ -57,21 +59,25 @@
 ### First way: Using python script
 
 - Run deploy_wrapper.py script 
-  > python3 deploy_wrapper.py
-- Save ERC20 wrapper address got in previous comand output.
-- Import just created token into Metamask.
+  > export WRAPPER_ADDRESS=$(python3 deploy_wrapper.py)
+
+- Import just created token into Metamask. You can get it's address by command:
+  > echo $WRAPPER_ADDRESS
 
 ### Second way: Using hardhat
 
 - Install JS requirements:
   > npm i
+
 - Compile contract
   > npx hardhat compile
-- Deploy contract
-  > npx hardhat run --network neonlabs scripts/deploy.js
-- Import just created token into Metamask using it's address:
-  > ERC20Wrapper deployed to: 0x5221D25fEDf90a01BE219be13C9D050C640Ea3A0
 
+- Deploy contract
+  > export WRAPPER_ADDRESS=$(npx hardhat run --network neonlabs scripts/deploy.js)
+  
+- Import just created token into Metamask. You can get it's address by command:
+  > echo $WRAPPER_ADDRESS
+  
 ## Minting tokens
 
 - Create associated token account using token mint address got on previous step:
@@ -90,11 +96,11 @@
 - Run deposit_token.py with two arguments:
   - address of ERC20 wrapper got on step 'Creating ERC20 wrapper'
   - amount
-  > python3 deposit_token.py 0x5221D25fEDf90a01BE219be13C9D050C640Ea3A0 10000000000
+  > python3 deposit_token.py $WRAPPER_ADDRESS 10000000000
 
 ## Withdrawing ERC20-wrapped SPL tokens from Neon to Solana
 
 - Run withdraw_token.py with two arguments:
   - address of ERC20 wrapper got on step 'Creating ERC20 wrapper'
   - amount
-  > python3 withdraw_token.py 0x5221D25fEDf90a01BE219be13C9D050C640Ea3A0 1000000000
+  > python3 withdraw_token.py $WRAPPER_ADDRESS 1000000000

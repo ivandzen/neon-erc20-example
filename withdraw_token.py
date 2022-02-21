@@ -3,7 +3,7 @@ from common import *
 import sys
 
 ERC20_CONTRACT_ADDRESS = sys.argv[1]
-AMOUNT = 100
+AMOUNT = int(sys.argv[2])
 
 interface_abi = None
 with open('./erc20_iface.json', 'r') as f:

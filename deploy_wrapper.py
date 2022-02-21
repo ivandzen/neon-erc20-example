@@ -9,4 +9,4 @@ wrapper = ERC20Wrapper.deploy(
     TEST_TOKEN_MINT,
     neon_account)
 
-print(f'ERC20 wrapper {wrapper.eth_contract_address} created for SPL token {TEST_TOKEN_MINT}')
+print(f'{wrapper.eth_contract_address}')

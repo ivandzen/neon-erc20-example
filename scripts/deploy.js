@@ -8,7 +8,6 @@ async function main() {
     return;
   }
 
-  console.log(`SPL token mint: ${token_mint}`);
   token_mint = base58_to_binary(token_mint);
 
   const Wrapper = await hre.ethers.getContractFactory("NeonERC20Wrapper");
@@ -16,7 +15,7 @@ async function main() {
 
   await wrapper.deployed();
 
-  console.log("ERC20Wrapper deployed to:", wrapper.address);
+  console.log(wrapper.address);
 }
 
 main().catch((error) => {

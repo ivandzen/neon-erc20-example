@@ -28,7 +28,10 @@
 - Airdrop some SOLs to your wallet address from [here](http://solfaucet.com) *NOTE* Make sure you airdropping to devnet
 
 ## Setup Neon account (using Metamask)
-
+- Connect your metamask wallet to Neon Devnet using this settings:
+    - New RPC URL: https://proxy.devnet.neonlabs.org/solana
+    - Chain ID: 245022926
+    - Currency Symbol (optional): NEON
 - Create new account in Metamask
 - Airdrop some NEONs to just created account [here](https://neonswap.live/#/get-tokens)
 - Copy your Metamask account private key (Account Details >> Export Private Key)

@@ -24,25 +24,24 @@
 - Create new solana account. You will be asked for passphrase (may skip this step by pressing Enter)
   > solana-keygen new -o ~/.config/solana/id.json --force
 
-- Find your solana wallet address by typing in command line:
-  > solana address
-
-- Airdrop some SOLs to your wallet address from [here](http://solfaucet.com) *NOTE* Make sure you airdropping to devnet
+- Airdrop SOLs to just created account:
+  > solana airdrop 2
 
 ## Setup Neon account (using Metamask)
 - Connect your metamask wallet to Neon Devnet using this settings:
+    - Network Name: Neon Devnet
     - New RPC URL: https://proxy.devnet.neonlabs.org/solana
     - Chain ID: 245022926
     - Currency Symbol (optional): NEON
 - Create new account in Metamask
-- Airdrop some NEONs to just created account [here](https://neonswap.live/#/get-tokens)
+- Airdrop at most 10 NEONs to just created account [from here](https://neonswap.live/#/get-tokens)
 - Copy your Metamask account private key (Account Details >> Export Private Key)
 - Insert just copied private key into quotes in line 15 in file **common.py**
 - Insert just copied private key into quotes in line 5 in file **hardhat.config.py** - **NOTE** Add **0x** prefix in begining
 
 ## Create new token mint
 
-- cd to this file's parent directory in command line
+- Change current directory to neon-erc0-example
 
 - Generate keypair for new SPL token:
   > solana-keygen new -o test-token-mint.json --force
